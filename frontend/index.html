@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+   <html>
+   <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+     <title>Hospital</title>
+     <link rel="stylesheet" href="estilos.css">
+     <style>
+       body { font-family: Arial, sans-serif; margin: 20px; }
+       form { max-width: 400px; margin-bottom: 20px; }
+       label { display: block; margin: 10px 0 5px; }
+       input, button { width: 100%; padding: 8px; margin-bottom: 10px; }
+       #tokenDisplay { margin-top: 20px; }
+       #historialForm, #adjuntosForm { display: none; }
+       #logoutBtn { display: none; margin-top: 10px; }
+       #adjuntosForm { margin-top: 20px; }
+     </style>
+   </head>
+   <body>
+     <h2>Iniciar Sesión</h2>
+     <form id="loginForm">
+       <label>Usuario:</label><input type="text" id="username" required>
+       <label>Contraseña:</label><input type="password" id="password" required>
+       <button type="submit">Iniciar Sesión</button>
+     </form>
+     <div id="tokenDisplay">Token: <span id="token"></span></div>
+
+     <div id="historialSection" style="display: none;"></div>
+     <h2>Historial Personal</h2>
+     <form id="historialForm">
+       <label>ID Paciente:</label><input type="number" id="idPaciente" required>
+       <label>Alergias:</label><input type="text" id="alergias" required>
+       <label>Enfermedades:</label><input type="text" id="enfermedades" required>
+       <button type="submit">Guardar</button>
+     </form>
+
+     <h2>Adjuntar Archivos</h2>
+     <form id="adjuntosForm" enctype="multipart/form-data">
+       <label>ID Paciente:</label><input type="number" id="adjuntosIdPaciente" required>
+       <label>Descripción:</label><input type="text" id="adjuntosDescripcion">
+       <label>Archivo:</label><input type="file" id="adjuntosArchivo" name="archivo" required>
+       <button type="submit">Subir Archivo</button>
+     </form>
+     <button id="logoutBtn">Cerrar Sesión</button>
+
+     <script>
+       const loginForm = document.getElementById('loginForm');
+       const historialForm = document.getElementById('historialForm');
+       const adjuntosForm = document.getElementById('adjuntosForm');
+       const tokenDisplay = document.getElementById('token');
+       const logoutBtn = document.getElementById('logoutBtn');
+       let token = localStorage.getItem('token');
+       let currentRole = null; // Para almacenar el rol del usuario
+
+       // Mostrar u ocultar formularios según el token y rol
+       if (token) {
+         // Decodificar el token para obtener el rol (simplificado, en producción usa una librería)
+         const payload = JSON.parse(atob(token.split('.')[1]));
+         currentRole = payload.role;
+
+         historialForm.style.display = 'block';
+         loginForm.style.display = 'none';
+         tokenDisplay.textContent = token;
+         logoutBtn.style.display = 'block';
+
+         // Mostrar adjuntosForm solo para admin (0) y doctor (1)
+         if (currentRole === 0 || currentRole === 1) {
+           adjuntosForm.style.display = 'block';
+         }
+       } else {
+         historialForm.style.display = 'none';
+         adjuntosForm.style.display = 'none';
+         loginForm.style.display = 'block';
+         logoutBtn.style.display = 'none';
+       }
+
+       loginForm.addEventListener('submit', async (e) => {
+         e.preventDefault();
+         const username = document.getElementById('username').value;
+         const password = document.getElementById('password').value;
+         const response = await fetch('http://localhost:3000/api/inicio-sesion', {
+           method: 'POST',
+           headers: { 'Content-Type': 'application/json' },
+           body: JSON.stringify({ username, password })
+         });
+         const data = await response.json();
+         if (data.token) {
+           token = data.token;
+           localStorage.setItem('token', token);
+           tokenDisplay.textContent = token;
+
+           // Decodificar el token para obtener el rol
+           const payload = JSON.parse(atob(token.split('.')[1]));
+           currentRole = payload.role;
+
+           loginForm.style.display = 'none';
+           historialForm.style.display = 'block';
+           logoutBtn.style.display = 'block';
+
+           if (currentRole === 0 || currentRole === 1) {
+             adjuntosForm.style.display = 'block';
+           }
+           alert('Sesión iniciada');
+         } else {
+           alert(data.error || 'Error al iniciar sesión');
+         }
+       });
+
+       historialForm.addEventListener('submit', async (e) => {
+         e.preventDefault();
+         if (!token) return alert('Debes iniciar sesión primero');
+         const idPaciente = document.getElementById('idPaciente').value;
+         const alergias = document.getElementById('alergias').value;
+         const enfermedades = document.getElementById('enfermedades').value;
+         const response = await fetch('http://localhost:3000/api/historial-personal', {
+           method: 'POST',
+           headers: {
+             'Authorization': `Bearer ${token}`,
+             'Content-Type': 'application/json'
+           },
+           body: JSON.stringify({ idPaciente, alergias, enfermedades })
+         });
+         const data = await response.json();
+         if (data.id) alert(`Historial guardado con ID: ${data.id}`);
+         else alert(data.error || 'Error al guardar');
+       });
+
+       adjuntosForm.addEventListener('submit', async (e) => {
+         e.preventDefault();
+         if (!token) return alert('Debes iniciar sesión primero');
+         if (currentRole !== 0 && currentRole !== 1) return alert('Solo admin y doctor pueden adjuntar archivos');
+
+         const idPaciente = document.getElementById('adjuntosIdPaciente').value;
+         const descripcion = document.getElementById('adjuntosDescripcion').value;
+         const archivo = document.getElementById('adjuntosArchivo').files[0];
+
+         const formData = new FormData();
+         formData.append('archivo', archivo);
+         formData.append('idPaciente', idPaciente);
+         formData.append('descripcion', descripcion);
+
+         const response = await fetch('http://localhost:3000/api/adjuntos', {
+           method: 'POST',
+           headers: {
+             'Authorization': `Bearer ${token}`
+           },
+           body: formData
+         });
+         const data = await response.json();
+         if (data.exito) alert('Archivo subido exitosamente');
+         else alert(data.error || 'Error al subir el archivo');
+       });
+
+       logoutBtn.addEventListener('click', () => {
+         token = null;
+         currentRole = null;
+         localStorage.removeItem('token');
+         tokenDisplay.textContent = '';
+         loginForm.style.display = 'block';
+         historialForm.style.display = 'none';
+         adjuntosForm.style.display = 'none';
+         logoutBtn.style.display = 'none';
+         alert('Sesión cerrada');
+       });
+     </script>
+   </body>
+   </html>
