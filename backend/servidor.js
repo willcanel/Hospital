@@ -22,21 +22,21 @@ const express = require('express');
     }
   }));
 
-  // Middleware para parsear JSON
+  // Middleware para parsear
   aplicacion.use(express.json());
 
-  // Servir archivos estáticos desde el directorio frontend
+  // archivos  fronted
   aplicacion.use(express.static(path.join(__dirname, '../frontend')));
 
   // Rutas de API
   aplicacion.use('/api', rutasApi);
 
-  // Ruta raíz protegida
+  // Ruta raíz 
   aplicacion.get('/', autenticar, (req, res) => {
     res.sendFile(path.join(__dirname, '../frontend/index.html'));
   });
 
-  // Ruta para manejar rutas no encontradas (sin autenticación)
+  // Ruta para mostrar el inicio si falla algo
   aplicacion.get('/*', (req, res) => {
     res.sendFile(path.join(__dirname, '../frontend/index.html'));
   });
