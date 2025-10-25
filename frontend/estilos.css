@@ -3,7 +3,7 @@ body {
     max-width: 800px;
     margin: 0 auto;
     padding: 20px;
-    background-color: #87CEEB;
+    background-color: #f8f9fa;
 }
 
 nav {
@@ -166,4 +166,16 @@ tr:hover {
     display: block;
     margin: 10px 0;
 }
+
+/* Contenedor del formulario de login */
+#loginForm {
+    max-width: 400px;
+    margin: 0 auto;
+    padding: 2rem;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease-in-out;
+}
+
 

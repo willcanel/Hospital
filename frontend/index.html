@@ -9,18 +9,29 @@
 <body>
     <nav>
         <ul id="navMenu">
-            <li><a href="index.html">Iniciar Sesión</a></li>
+            <li><a href="index.html"></a></li>
             <li id="formsLink" style="display: none;"><a href="forms.html">Formularios</a></li>
             <li id="historialLink" style="display: none;"><a href="HistorialPaciente.html">Historial Paciente</a></li>
         </ul>
     </nav>
   
     <form id="loginForm">
-        <label>Usuario:</label><input type="text" id="username" required>
-        <label>Contraseña:</label><input type="password" id="password" required>
-        <button type="submit">Iniciar Sesión</button>
-    </form>
-    <div id="tokenDisplay">Token: <span id="token"></span></div>
+                <h2 class="text-center mb-4">Iniciar Sesión</h2>
+                <div class="mb-3">
+                    <label for="username" class="form-label">Usuario:</label>
+                    <input type="text" class="form-control" id="username" required>
+                </div>
+                <div class="mb-3 password-wrapper">
+                    <label for="password" class="form-label">Contraseña:</label>
+                    <input type="password" class="form-control" id="password" required>
+                    <i class="bi bi-eye-slash" id="togglePassword"></i>
+                </div>
+                <button type="submit" class="btn btn-primary w-100">Iniciar Sesión</button>
+                <div class="spinner-border text-primary spinner mt-3" role="status">
+                    <span class="visually-hidden">Cargando...</span>
+                </div>
+            </form>
+    <div id="tokenDisplay"> <span id="token"></span></div>
 
     <form id="fetchHistorialForm" style="display: none;">
         <h2>Visualizar Historial del Paciente</h2>
