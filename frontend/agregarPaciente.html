@@ -9,26 +9,16 @@
 <body>
     <nav>
         <ul>
-            <li><a href="index.html">Iniciar Sesión</a></li>
-            <li><a href="forms.html">Formularios</a></li>
+            <li><a href="forms.html">INICIO</a></li>
             <li><a href="historialForm.html">Historial Personal</a></li>
-            <li id="adjuntosLink"><a href="adjuntosForm.html">Adjuntar Archivos</a></li>
+            <li id="adjuntosLink"><a href="adjuntosForm.html">Registro Medico de Paciente</a></li>
+            <li id="adjuntosLink"><a href="adjuntosForm.html">Adjuntar Exámenes</a></li>
             <li><a href="agregarPaciente.html">Agregar Paciente</a></li>
         </ul>
     </nav>
     <form id="agregarPacienteForm">
         <h2>Agregar Nuevo Paciente</h2>
         <label>Nombre Completo:</label><input type="text" id="fullName" required>
-        <label>Fecha de Nacimiento:</label><input type="date" id="birthDate">
-        <label>Género:</label>
-        <select id="gender">
-            <option value="">Seleccione una opción</option>
-            <option value="1">Masculino</option>
-            <option value="2">Femenino</option>
-            <option value="3">Otro</option>
-        </select>
-        <label>Teléfono de Contacto:</label><input type="text" id="contactPhone">
-        <label>Dirección:</label><input type="text" id="address">
         <button type="submit">Guardar Paciente</button>
     </form>
     <button id="logoutBtn">Cerrar Sesión</button>
@@ -71,10 +61,6 @@
             if (currentRole !== 0 && currentRole !== 1) return alert('Solo admin y doctor pueden agregar pacientes');
 
             const fullName = document.getElementById('fullName').value;
-            const birthDate = document.getElementById('birthDate').value || null;
-            const gender = document.getElementById('gender').value || null;
-            const contactPhone = document.getElementById('contactPhone').value || null;
-            const address = document.getElementById('address').value || null;
 
             try {
                 const response = await fetch('http://localhost:3000/api/patients', {
@@ -83,7 +69,7 @@
                         'Authorization': `Bearer ${token}`,
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({ fullName, birthDate, gender, contactPhone, address })
+                    body: JSON.stringify({ fullName})
                 });
                 const data = await response.json();
                 if (data.id) {

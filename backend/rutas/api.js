@@ -118,4 +118,22 @@ router.get('/historial-personal/:idPaciente', autenticar, async (req, res) => {
   }
 });
 
+router.post('/patients', autenticar, autorizar([0, 1]), async (req, res) => {
+    const { fullName } = req.body;
+    if (!fullName) {
+        return res.status(400).json({ error: 'Falta el nombre completo' });
+    }
+    try {
+        const db = grupoConexiones();
+        const [resultado] = await db.execute(
+            'INSERT INTO patients (full_name) VALUES (?)',
+            [fullName]
+        );
+        res.json({ id: resultado.insertId });
+    } catch (err) {
+        console.error('Error en /patients:', err);
+        res.status(500).json({ error: 'Error interno del servidor' });
+    }
+});
+
 module.exports = router;
