@@ -3,136 +3,92 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hospital - Inicio de Sesión</title>
+    <title>Hospital - Historial Paciente</title>
     <link rel="stylesheet" href="estilos.css">
 </head>
 <body>
     <nav>
-        <ul id="navMenu">
-            <li><a href="index.html">Iniciar Sesión</a></li>
-            <li id="formsLink" style="display: none;"><a href="forms.html">Formularios</a></li>
-            <li id="historialLink" style="display: none;"><a href="HistorialPaciente.html">Historial Paciente</a></li>
+        <ul>
+            <li><a href="forms.html">INICIO</a></li>
+            <li><a href="historialForm.html">Historial Personal</a></li>
+            <li id="adjuntosLink"><a href="adjuntosForm.html">Adjuntar Archivos</a></li>
+            <li><a href="HistorialPaciente.html">Historial Paciente</a></li>
         </ul>
     </nav>
-  
-    <form id="loginForm">
-        <label>Usuario:</label><input type="text" id="username" required>
-        <label>Contraseña:</label><input type="password" id="password" required>
-        <button type="submit">Iniciar Sesión</button>
-    </form>
-    <div id="tokenDisplay">Token: <span id="token"></span></div>
 
-    <form id="fetchHistorialForm" style="display: none;">
+    <form id="fetchHistorialForm">
         <h2>Visualizar Historial del Paciente</h2>
         <label for="idPaciente">ID Paciente:</label>
         <input type="number" id="idPaciente" min="1" required>
         <button type="submit">Ver Historial</button>
     </form>
     <div id="historialDisplay"></div>
+
     <button id="logoutBtn">Cerrar Sesión</button>
 
     <script>
-        const loginForm = document.getElementById('loginForm');
-        const tokenDisplay = document.getElementById('token');
-        const logoutBtn = document.getElementById('logoutBtn');
-        const formsLink = document.getElementById('formsLink');
-        const historialLink = document.getElementById('historialLink');
         const fetchHistorialForm = document.getElementById('fetchHistorialForm');
         const historialDisplay = document.getElementById('historialDisplay');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const adjuntosLink = document.getElementById('adjuntosLink');
         const idPacienteInput = document.getElementById('idPaciente');
         let token = localStorage.getItem('token');
         let currentRole = null;
         let userIdPaciente = null;
 
-        // Controlar visibilidad inicial
+        // Controlar visibilidad inicial y acceso
         if (token) {
             try {
                 const payload = JSON.parse(atob(token.split('.')[1]));
                 currentRole = payload.role;
                 userIdPaciente = payload.idPaciente;
-                loginForm.style.display = 'none';
-                tokenDisplay.textContent = token;
-                logoutBtn.style.display = 'block';
-                formsLink.style.display = 'inline';
-                historialLink.style.display = 'inline';
                 fetchHistorialForm.style.display = 'block';
-                if (currentRole === 2 && userIdPaciente) {
-                    idPacienteInput.value = userIdPaciente;
-                    idPacienteInput.disabled = true;
-                }
-            } catch (e) {
-                localStorage.removeItem('token');
-                token = null;
-                loginForm.style.display = 'block';
-                logoutBtn.style.display = 'none';
-                formsLink.style.display = 'none';
-                historialLink.style.display = 'none';
-                fetchHistorialForm.style.display = 'none';
-            }
-        } else {
-            loginForm.style.display = 'block';
-            logoutBtn.style.display = 'none';
-            formsLink.style.display = 'none';
-            historialLink.style.display = 'none';
-            fetchHistorialForm.style.display = 'none';
-        }
-
-        // Manejar inicio de sesión
-        loginForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const username = document.getElementById('username').value;
-            const password = document.getElementById('password').value;
-            try {
-                const response = await fetch('http://localhost:3000/api/inicio-sesion', {
-                    method: 'POST',
-                    headers: { 
-                        'Content-Type': 'application/json',
-                        'Cache-Control': 'no-cache'
-                    },
-                    body: JSON.stringify({ username, password })
-                });
-                const data = await response.json();
-                if (data.token) {
-                    token = data.token;
-                    localStorage.setItem('token', token);
-                    tokenDisplay.textContent = token;
-                    const payload = JSON.parse(atob(token.split('.')[1]));
-                    currentRole = payload.role;
-                    userIdPaciente = payload.idPaciente;
-                    loginForm.style.display = 'none';
-                    logoutBtn.style.display = 'block';
-                    formsLink.style.display = 'inline';
-                    historialLink.style.display = 'inline';
-                    fetchHistorialForm.style.display = 'block';
-                    if (currentRole === 2 && userIdPaciente) {
+                logoutBtn.style.display = 'block';
+                if (currentRole === 0 || currentRole === 1) {
+                    adjuntosLink.style.display = 'inline';
+                } else {
+                    adjuntosLink.style.display = 'none';
+                    if (userIdPaciente) {
                         idPacienteInput.value = userIdPaciente;
                         idPacienteInput.disabled = true;
                     }
-                    alert('Sesión iniciada');
-                    window.location.href = 'forms.html';
-                } else {
-                    alert(data.error || 'Error al iniciar sesión');
                 }
-            } catch (err) {
-                alert('Error: ' + err.message);
-                console.error('Error detallado:', err);
+            } catch (e) {
+                console.error('Error decoding token:', e);
+                localStorage.removeItem('token');
+                historialDisplay.innerHTML = '<p style="color: red;">Sesión inválida. Redirigiendo al inicio de sesión...</p>';
+                setTimeout(() => {
+                    window.location.href = 'index.html';
+                }, 2000);
             }
-        });
+        } else {
+            fetchHistorialForm.style.display = 'none';
+            logoutBtn.style.display = 'none';
+            adjuntosLink.style.display = 'none';
+            historialDisplay.innerHTML = '<p style="color: red;">Debes iniciar sesión primero. Redirigiendo...</p>';
+            setTimeout(() => {
+                window.location.href = 'index.html';
+            }, 2000);
+        }
 
-        // Manejar visualización del historial
+        // Manejar envío del formulario
         fetchHistorialForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             if (!token) {
-                alert('Debes iniciar sesión primero');
-                window.location.href = 'index.html';
+                historialDisplay.innerHTML = '<p style="color: red;">Debes iniciar sesión primero.</p>';
+                setTimeout(() => {
+                    window.location.href = 'index.html';
+                }, 2000);
                 return;
             }
             const idPaciente = idPacienteInput.value;
             if (currentRole === 2 && userIdPaciente != idPaciente) {
-                alert('Solo puedes ver tu propio historial');
+                historialDisplay.innerHTML = '<p style="color: red;">Solo puedes ver tu propio historial.</p>';
                 return;
             }
             try {
+                console.log('Enviando solicitud a:', `http://localhost:3000/api/historial-personal/${idPaciente}`);
+                console.log('Token usado:', token);
                 const response = await fetch(`http://localhost:3000/api/historial-personal/${idPaciente}`, {
                     method: 'GET',
                     headers: {
@@ -149,6 +105,14 @@
                         throw new Error('El servidor devolvió una página HTML. Verifica que el endpoint /api/historial-personal esté configurado correctamente.');
                     }
                     const errorData = JSON.parse(text);
+                    if (response.status === 401) {
+                        localStorage.removeItem('token');
+                        historialDisplay.innerHTML = '<p style="color: red;">Sesión expirada o inválida. Redirigiendo al inicio de sesión...</p>';
+                        setTimeout(() => {
+                            window.location.href = 'index.html';
+                        }, 2000);
+                        return;
+                    }
                     throw new Error(errorData.error || `Error HTTP ${response.status}`);
                 }
                 const data = await response.json();
@@ -203,16 +167,13 @@
         logoutBtn.addEventListener('click', () => {
             token = null;
             currentRole = null;
-            userIdPaciente = null;
             localStorage.removeItem('token');
-            tokenDisplay.textContent = '';
-            loginForm.style.display = 'block';
-            logoutBtn.style.display = 'none';
-            formsLink.style.display = 'none';
-            historialLink.style.display = 'none';
             fetchHistorialForm.style.display = 'none';
+            logoutBtn.style.display = 'none';
+            adjuntosLink.style.display = 'none';
             historialDisplay.innerHTML = '';
             alert('Sesión cerrada');
+            window.location.href = 'index.html';
         });
     </script>
 </body>

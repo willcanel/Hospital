@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hospital - Agregar Paciente</title>
+    <link rel="stylesheet" href="estilos.css">
+</head>
+<body>
+    <nav>
+        <ul>
+            <li><a href="index.html">Iniciar Sesión</a></li>
+            <li><a href="forms.html">Formularios</a></li>
+            <li><a href="historialForm.html">Historial Personal</a></li>
+            <li id="adjuntosLink"><a href="adjuntosForm.html">Adjuntar Archivos</a></li>
+            <li><a href="agregarPaciente.html">Agregar Paciente</a></li>
+        </ul>
+    </nav>
+    <form id="agregarPacienteForm">
+        <h2>Agregar Nuevo Paciente</h2>
+        <label>Nombre Completo:</label><input type="text" id="fullName" required>
+        <label>Fecha de Nacimiento:</label><input type="date" id="birthDate">
+        <label>Género:</label>
+        <select id="gender">
+            <option value="">Seleccione una opción</option>
+            <option value="1">Masculino</option>
+            <option value="2">Femenino</option>
+            <option value="3">Otro</option>
+        </select>
+        <label>Teléfono de Contacto:</label><input type="text" id="contactPhone">
+        <label>Dirección:</label><input type="text" id="address">
+        <button type="submit">Guardar Paciente</button>
+    </form>
+    <button id="logoutBtn">Cerrar Sesión</button>
+
+    <script>
+        const agregarPacienteForm = document.getElementById('agregarPacienteForm');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const adjuntosLink = document.getElementById('adjuntosLink');
+        let token = localStorage.getItem('token');
+        let currentRole = null;
+
+        // Controlar visibilidad inicial y acceso
+        if (token) {
+            try {
+                const payload = JSON.parse(atob(token.split('.')[1]));
+                currentRole = payload.role;
+                if (currentRole === 0 || currentRole === 1) {
+                    agregarPacienteForm.style.display = 'block';
+                    logoutBtn.style.display = 'block';
+                    adjuntosLink.style.display = 'inline';
+                } else {
+                    alert('Solo admin y doctor pueden agregar pacientes');
+                    window.location.href = 'forms.html';
+                }
+            } catch (e) {
+                localStorage.removeItem('token');
+                window.location.href = 'index.html';
+            }
+        } else {
+            agregarPacienteForm.style.display = 'none';
+            logoutBtn.style.display = 'none';
+            adjuntosLink.style.display = 'none';
+            window.location.href = 'index.html';
+        }
+
+        // Manejar envío del formulario
+        agregarPacienteForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (!token) return alert('Debes iniciar sesión primero');
+            if (currentRole !== 0 && currentRole !== 1) return alert('Solo admin y doctor pueden agregar pacientes');
+
+            const fullName = document.getElementById('fullName').value;
+            const birthDate = document.getElementById('birthDate').value || null;
+            const gender = document.getElementById('gender').value || null;
+            const contactPhone = document.getElementById('contactPhone').value || null;
+            const address = document.getElementById('address').value || null;
+
+            try {
+                const response = await fetch('http://localhost:3000/api/patients', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ fullName, birthDate, gender, contactPhone, address })
+                });
+                const data = await response.json();
+                if (data.id) {
+                    alert(`Paciente agregado con ID: ${data.id}`);
+                    agregarPacienteForm.reset();
+                } else {
+                    alert(data.error || 'Error al agregar paciente');
+                }
+            } catch (err) {
+                alert('Error: ' + err.message);
+            }
+        });
+
+        // Manejar cierre de sesión
+        logoutBtn.addEventListener('click', () => {
+            token = null;
+            currentRole = null;
+            localStorage.removeItem('token');
+            agregarPacienteForm.style.display = 'none';
+            logoutBtn.style.display = 'none';
+            adjuntosLink.style.display = 'none';
+            alert('Sesión cerrada');
+            window.location.href = 'index.html';
+        });
+    </script>
+</body>
+</html>

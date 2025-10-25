@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hospital - Formularios</title>
+    <link rel="stylesheet" href="estilos.css">
+</head>
+<body>
+    <nav>
+        <ul>
+            <li id="historialLink"><a href="historialForm.html">Registro Médico de Paciente</a></li>
+            <li id="adjuntosLink"><a href="adjuntosForm.html">Adjuntar Exámenes</a></li>
+            <li id="historialPacienteLink"><a href="HistorialPaciente.html">Historial Paciente</a></li>
+        </ul>
+    </nav>
+    <button id="logoutBtn">Cerrar Sesión</button>
+
+    <script>
+        const logoutBtn = document.getElementById('logoutBtn');
+        const historialLink = document.getElementById('historialLink');
+        const adjuntosLink = document.getElementById('adjuntosLink');
+        const historialPacienteLink = document.getElementById('historialPacienteLink');
+        let token = localStorage.getItem('token');
+        let currentRole = null;
+
+        // Controlar visibilidad inicial y acceso
+        if (token) {
+            try {
+                const payload = JSON.parse(atob(token.split('.')[1]));
+                currentRole = payload.role;
+                logoutBtn.style.display = 'block';
+                historialLink.style.display = 'inline';
+                historialPacienteLink.style.display = 'inline'; // Mostrar enlace a HistorialPaciente.html
+                if (currentRole === 0 || currentRole === 1) {
+                    adjuntosLink.style.display = 'inline';
+                } else {
+                    adjuntosLink.style.display = 'none';
+                }
+            } catch (e) {
+                localStorage.removeItem('token');
+                token = null;
+                logoutBtn.style.display = 'none';
+                historialLink.style.display = 'none';
+                adjuntosLink.style.display = 'none';
+                historialPacienteLink.style.display = 'none';
+                alert('Sesión inválida. Redirigiendo al inicio de sesión.');
+                window.location.href = 'index.html';
+            }
+        } else {
+            logoutBtn.style.display = 'none';
+            historialLink.style.display = 'none';
+            adjuntosLink.style.display = 'none';
+            historialPacienteLink.style.display = 'none';
+            alert('Debes iniciar sesión primero.');
+            window.location.href = 'index.html';
+        }
+
+        // Manejar cierre de sesión
+        logoutBtn.addEventListener('click', () => {
+            token = null;
+            currentRole = null;
+            localStorage.removeItem('token');
+            logoutBtn.style.display = 'none';
+            historialLink.style.display = 'none';
+            adjuntosLink.style.display = 'none';
+            historialPacienteLink.style.display = 'none';
+            alert('Sesión cerrada');
+            window.location.href = 'index.html';
+        });
+    </script>
+</body>
+</html>

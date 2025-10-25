@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hospital - Adjuntar Archivos</title>
+    <link rel="stylesheet" href="estilos.css">
+</head>
+<body>
+    <nav>
+        <ul>
+            <li><a href="forms.html">INICIO</a></li>
+            <li><a href="historialForm.html">Historial Personal</a></li>
+            <li><a href="adjuntosForm.html">Adjuntar Examenes</a></li>
+        </ul>
+    </nav>
+    <form id="adjuntosForm" enctype="multipart/form-data">
+        <h2>Adjuntar Examenes</h2>
+        <label>ID Paciente:</label><input type="number" id="adjuntosIdPaciente" required>
+        <label>Descripción:</label><input type="text" id="adjuntosDescripcion">
+        <label>Archivo:</label><input type="file" id="adjuntosArchivo" name="archivo" required>
+        <button type="submit">Subir Archivo</button>
+    </form>
+    <button id="logoutBtn">Cerrar Sesión</button>
+
+    <script>
+        const adjuntosForm = document.getElementById('adjuntosForm');
+        const logoutBtn = document.getElementById('logoutBtn');
+        let token = localStorage.getItem('token');
+        let currentRole = null;
+
+        // Controlar visibilidad inicial y acceso
+        if (token) {
+            try {
+                const payload = JSON.parse(atob(token.split('.')[1]));
+                currentRole = payload.role;
+                if (currentRole === 0 || currentRole === 1) {
+                    adjuntosForm.style.display = 'block';
+                    logoutBtn.style.display = 'block';
+                } else {
+                    alert('Solo admin y doctor pueden adjuntar archivos');
+                    window.location.href = 'forms.html';
+                }
+            } catch (e) {
+                localStorage.removeItem('token');
+                window.location.href = 'index.html';
+            }
+        } else {
+            adjuntosForm.style.display = 'none';
+            logoutBtn.style.display = 'none';
+            window.location.href = 'index.html';
+        }
+
+        // Manejar envío de adjuntos
+        adjuntosForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (!token) return alert('Debes iniciar sesión primero');
+            if (currentRole !== 0 && currentRole !== 1) return alert('Solo admin y doctor pueden adjuntar archivos');
+
+            const idPaciente = document.getElementById('adjuntosIdPaciente').value;
+            const descripcion = document.getElementById('adjuntosDescripcion').value;
+            const archivo = document.getElementById('adjuntosArchivo').files[0];
+
+            const formData = new FormData();
+            formData.append('archivo', archivo);
+            formData.append('idPaciente', idPaciente);
+            formData.append('descripcion', descripcion);
+
+            const response = await fetch('http://localhost:3000/api/adjuntos', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                },
+                body: formData
+            });
+            const data = await response.json();
+            if (data.exito) alert('Archivo subido exitosamente');
+            else alert(data.error || 'Error al subir el archivo');
+        });
+
+        // Manejar cierre de sesión
+        logoutBtn.addEventListener('click', () => {
+            token = null;
+            currentRole = null;
+            localStorage.removeItem('token');
+            adjuntosForm.style.display = 'none';
+            logoutBtn.style.display = 'none';
+            alert('Sesión cerrada');
+            window.location.href = 'index.html';
+        });
+    </script>
+</body>
+</html>
