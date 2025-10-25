@@ -19,6 +19,7 @@
     <form id="agregarPacienteForm">
         <h2>Agregar Nuevo Paciente</h2>
         <label>Nombre Completo:</label><input type="text" id="fullName" required>
+        <label>Numero Telefonico:</label><input type="text" id="contactPhone" required>
         <button type="submit">Guardar Paciente</button>
     </form>
     <button id="logoutBtn">Cerrar Sesión</button>
@@ -61,6 +62,7 @@
             if (currentRole !== 0 && currentRole !== 1) return alert('Solo admin y doctor pueden agregar pacientes');
 
             const fullName = document.getElementById('fullName').value;
+            const contactPhone = document.getElementById('contactPhone').value;
 
             try {
                 const response = await fetch('http://localhost:3000/api/patients', {

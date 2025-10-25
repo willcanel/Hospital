@@ -126,8 +126,8 @@ router.post('/patients', autenticar, autorizar([0, 1]), async (req, res) => {
     try {
         const db = grupoConexiones();
         const [resultado] = await db.execute(
-            'INSERT INTO patients (full_name) VALUES (?)',
-            [fullName]
+            'INSERT INTO patients (full_name,contact_phone) VALUES (?,?)',
+            [fullName,contactPhone]
         );
         res.json({ id: resultado.insertId });
     } catch (err) {
